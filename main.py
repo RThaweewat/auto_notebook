@@ -7,7 +7,6 @@ from rouge_score import rouge_scorer
 from typing import List
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import pandas as pd
-import nbformat
 import os
 
 
@@ -89,34 +88,36 @@ def get_score(original, summary):
 
 
 def insert_and_save_summary(
-    notebook_path: str, summary_text: str, new_suffix: str = "_summarized"
+		notebook_path: str, summary_text: str, new_suffix: str = "_summarized"
 ) -> None:
-    """
-    Inserts the summary text after the first header and saves to a new notebook.
+	"""
+	Inserts the summary text after the first header and saves to a new notebook.
 
-    :param notebook_path: The path of the original notebook
-    :param summary_text: The summary text to insert
-    :param new_suffix: The suffix to add to the new notebook filename
-    """
-    with open(notebook_path, "r", encoding="utf-8") as f:
-        notebook = nbformat.read(f, as_version=4)
+	:param notebook_path: The path of the original notebook
+	:param summary_text: The summary text to insert
+	:param new_suffix: The suffix to add to the new notebook filename
+	"""
+	# Load the notebook
+	with open(notebook_path, 'r', encoding='utf-8') as f:
+		notebook = json.load(f)
 
-    # Create a new markdown cell with the summary
-    summary_cell = nbformat.v4.new_markdown_cell(summary_text)
+	# Create a new markdown cell with the summary
+	summary_cell = {"cell_type": "markdown", "metadata": {}, "source": [summary_text]}
 
-    # Find the first header cell
-    insert_pos = None
-    for i, cell in enumerate(notebook.cells):
-        if cell.cell_type == "markdown":
-            if re.search(r"^#+ ", cell.source):
-                insert_pos = i + 1
-                break
+	# Find the first header cell and insert summary cell after it
+	for i, cell in enumerate(notebook['cells']):
+		if cell['cell_type'] == 'markdown':
+			if re.search(r'^#+ ', ''.join(cell['source'])):
+				notebook['cells'].insert(i + 1, summary_cell)
+				break
+	else:
+		# If no header is found, append at the end
+		notebook['cells'].append(summary_cell)
 
-    # If a header is found, insert summary; otherwise append at the end
-    if insert_pos is not None:
-        notebook.cells.insert(insert_pos, summary_cell)
-    else:
-        notebook.cells.append(summary_cell)
+	# Save to a new file
+	new_file_path = os.path.splitext(notebook_path)[0] + new_suffix + ".ipynb"
+	with open(new_file_path, 'w', encoding='utf-8') as f:
+		json.dump(notebook, f, ensure_ascii=False, indent=4)
 
 
 # Streamlit app
