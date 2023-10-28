@@ -2,3 +2,4 @@ openai
 rouge_score
 nltk
 nbformat
+nbclient
