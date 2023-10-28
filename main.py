@@ -122,6 +122,7 @@ def insert_and_save_summary(
 
 # Streamlit app
 def main():
+    st.image("img.jpg", use_column_width=True)
     st.title('Jupyter Notebook Summarizer')
 
     # Upload notebook file
@@ -146,7 +147,7 @@ def main():
         rouge_score, bleu_score = get_score(notebook_code, summary_text)
         
         # Display scores
-        st.write(f"Rouge Score: {rouge_score}, BLEU Score: {bleu_score}")
+        st.write(f"Rouge Score: {rouge_score.fmeasure:.2f}, BLEU Score: {bleu_score:.2f}")
 
 	# Display summarized text
         st.markdown("### Summarized Text")
