@@ -122,15 +122,15 @@ def insert_and_save_summary(
 
 # Streamlit app
 def main():
-    st.title("Jupyter Notebook Summarizer")
+    st.title('Jupyter Notebook Summarizer')
 
     # Upload notebook file
     uploaded_file = st.file_uploader("Upload a Jupyter Notebook", type=["ipynb"])
 
     if uploaded_file is not None:
-        # Use tempfile to create a temp file
-        tfile = tempfile.NamedTemporaryFile(delete=False)
-        tfile.write(uploaded_file.read())
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".ipynb") as tfile:
+            tfile.write(uploaded_file.read())
 
         # Get notebook content
         notebook_code = get_notebook_context(tfile.name)
@@ -139,18 +139,28 @@ def main():
         summary_text = summary(notebook_code=notebook_code)
 
         # Insert summary and save to new notebook
+        summarized_file = tfile.name.replace(".ipynb", "_summarized.ipynb")
         insert_and_save_summary(tfile.name, summary_text)
-
+        
         # Calculate scores
         rouge_score, bleu_score = get_score(notebook_code, summary_text)
-
-        # Display the scores
+        
+        # Display scores
         st.write(f"Rouge Score: {rouge_score}, BLEU Score: {bleu_score}")
 
-        # Provide a download link
-        st.markdown(
-            f"[Download Summarized Notebook](sandbox:/{tfile.name+'_summarized.ipynb'})"
+        # Create a download button
+        with open(summarized_file, "rb") as f:
+            bytes_data = f.read()
+        st.download_button(
+            label="Download Summarized Notebook",
+            data=bytes_data,
+            file_name="notebook_summarized.ipynb",
+            mime="application/x-ipynb+json"
         )
+        
+        # Cleanup temporary files
+        os.remove(tfile.name)
+        os.remove(summarized_file)
 
 
 # Combine this with your existing functions:
