@@ -148,6 +148,10 @@ def main():
         # Display scores
         st.write(f"Rouge Score: {rouge_score}, BLEU Score: {bleu_score}")
 
+	# Display summarized text
+        st.markdown("### Summarized Text")
+        st.text(summary_text)
+
         # Create a download button
         with open(summarized_file, "rb") as f:
             bytes_data = f.read()
